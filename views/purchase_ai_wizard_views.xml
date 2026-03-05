@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Standalone action (default: PO mode) -->
+    <record id="action_purchase_ai_wizard" model="ir.actions.act_window">
+        <field name="name">📄 Escanear Factura con IA</field>
+        <field name="res_model">purchase.ai.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{}</field>
+    </record>
+
+    <!-- Standalone action (default: Vendor Bill mode) -->
+    <record id="action_purchase_ai_wizard_bill" model="ir.actions.act_window">
+        <field name="name">📄 Escanear Factura con IA → Factura</field>
+        <field name="res_model">purchase.ai.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_target_type': 'vendor_bill'}</field>
+    </record>
+
+    <record id="view_purchase_ai_wizard_form" model="ir.ui.view">
+        <field name="name">purchase.ai.wizard.form</field>
+        <field name="model">purchase.ai.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Escanear Factura → Orden / Factura / FEL">
+
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="upload,review,approve,done"/>
+                </header>
+
+                <sheet>
+
+                    <!-- ═══ Source document banner ═══ -->
+                    <div attrs="{'invisible': [('source_purchase_id', '=', False)]}"
+                         style="padding:10px;background:#e8f4fd;border-left:4px solid #0d6efd;border-radius:4px;margin-bottom:12px;">
+                        📋 <b>Desde Orden de Compra:</b>
+                        <field name="source_purchase_id" readonly="1" nolabel="1" class="oe_inline"/>
+                        — Se creará Factura de Proveedor + FEL vinculados a esta OC.
+                    </div>
+                    <div attrs="{'invisible': [('source_move_id', '=', False)]}"
+                         style="padding:10px;background:#f0e6ff;border-left:4px solid #7c3aed;border-radius:4px;margin-bottom:12px;">
+                        🧾 <b>Desde Factura:</b>
+                        <field name="source_move_id" readonly="1" nolabel="1" class="oe_inline"/>
+                        — Solo se creará el registro FEL.
+                    </div>
+
+                    <!-- ═══ STAGE 1 — UPLOAD ═══ -->
+                    <group attrs="{'invisible': [('state', '!=', 'upload')]}">
+
+                        <group string="📄 Subir Documento">
+                            <field name="document_file" widget="binary" string="Factura / Recibo"
+                                   filename="document_filename"
+                                   attrs="{'required': [('state', '=', 'upload')]}"/>
+                            <field name="document_filename" invisible="1"/>
+                            <field name="document_mimetype" invisible="1"/>
+                        </group>
+
+                        <group string="⚙️ Opciones">
+                            <!-- Target type (hidden when launched from source) -->
+                            <field name="target_type" widget="radio" string="Crear como"
+                                   attrs="{'invisible': ['|', ('source_purchase_id', '!=', False), ('source_move_id', '!=', False)],
+                                           'readonly': ['|', ('source_purchase_id', '!=', False), ('source_move_id', '!=', False)]}"/>
+
+                            <!-- Use PO lines option (only when from PO) -->
+                            <field name="use_po_lines"
+                                   attrs="{'invisible': [('source_purchase_id', '=', False)]}"
+                                   string="📋 Usar líneas de la OC (detalles factura van a notas)"/>
+
+                            <field name="is_viaticos" string="💼 Agrupar como Viáticos"
+                                   attrs="{'invisible': [('target_type', '=', 'fel_only')]}"/>
+                        </group>
+
+                    </group>
+
+                    <!-- ═══ STAGE 2 — REVIEW ═══ -->
+                    <group attrs="{'invisible': [('state', 'not in', ['review', 'approve'])]}">
+
+                        <div attrs="{'invisible': [('matching_summary', '=', False)]}" colspan="4">
+                            <field name="matching_summary" widget="html" nolabel="1"/>
+                        </div>
+
+                        <!-- Vendor block -->
+                        <group string="🏪 Proveedor" colspan="4">
+                            <group>
+                                <field name="vendor_nit" string="NIT"/>
+                                <field name="vendor_name_raw" string="Nombre (factura)"/>
+                                <field name="vendor_state" widget="badge"
+                                       decoration-success="vendor_state in ('found', 'created', 'manual', 'from_source')"
+                                       decoration-warning="vendor_state == 'name_match'"
+                                       decoration-danger="vendor_state == 'not_found'"/>
+                            </group>
+                            <group>
+                                <field name="vendor_id" string="Proveedor en Odoo"
+                                       options="{'no_quick_create': false}"
+                                       domain="[('supplier_rank', '&gt;', 0)]"/>
+                                <field name="vendor_address" optional="show"/>
+                            </group>
+                            <div colspan="4" style="margin-top:4px">
+                                <button name="action_lookup_vendor_by_nit" type="object"
+                                        string="🔍 Buscar por NIT" class="btn-secondary btn-sm"/>
+                                <button name="action_create_vendor" type="object"
+                                        string="➕ Crear Proveedor" class="btn-warning btn-sm"
+                                        attrs="{'invisible': [('vendor_id', '!=', False)]}"/>
+                            </div>
+                        </group>
+
+                        <!-- Invoice + FEL header -->
+                        <group string="📋 Factura">
+                            <field name="invoice_number"/>
+                            <field name="invoice_date"
+                                   attrs="{'required': [('state', 'in', ['review', 'approve'])]}"/>
+                            <field name="currency_id" options="{'no_open': True}"/>
+                        </group>
+                        <group string="📄 Datos FEL">
+                            <field name="fel_uuid" string="UUID FEL / SAT"/>
+                            <field name="fel_serie" string="Serie DTE"/>
+                            <field name="fel_number" string="Número DTE"/>
+                        </group>
+                        <group string="💰 Totales">
+                            <field name="subtotal_before_tax" string="Subtotal s/IVA"/>
+                            <field name="tax_amount" string="IVA"/>
+                            <field name="total_amount" string="Total"/>
+                        </group>
+
+                        <!-- Lines (hidden in fel_only mode) -->
+                        <notebook colspan="4" attrs="{'invisible': [('target_type', '=', 'fel_only')]}">
+                            <page string="📦 Líneas">
+                                <field name="line_ids" nolabel="1">
+                                    <tree editable="bottom"
+                                          decoration-success="match_confidence in ('high', 'from_po')"
+                                          decoration-warning="match_confidence == 'medium'"
+                                          decoration-danger="match_confidence in ('low', 'none')"
+                                          decoration-info="match_confidence in ('manual', 'created')">
+                                        <field name="description" string="Descripción"/>
+                                        <field name="product_id" string="Producto Odoo"
+                                               domain="[('purchase_ok','=',True)]"
+                                               options="{'no_quick_create': false}" widget="many2one"/>
+                                        <field name="match_confidence" string="Conf." optional="show"/>
+                                        <field name="match_reason" string="Razón" optional="show"/>
+                                        <button name="action_create_product" type="object" string="🆕"
+                                                title="Asignar producto"
+                                                attrs="{'invisible': [('product_id', '!=', False)]}"
+                                                class="btn-sm btn-outline-primary"/>
+                                        <field name="quantity" string="Cant."/>
+                                        <field name="uom_id" string="UOM" optional="show"/>
+                                        <field name="unit_price" string="P. Unit."/>
+                                        <field name="line_total" string="Subtotal" optional="show"/>
+                                        <field name="tax_ids" widget="many2many_tags" optional="show"
+                                               domain="[('type_tax_use','=','purchase')]"/>
+                                        <field name="needs_product" invisible="1"/>
+                                        <field name="source_po_line_id" invisible="1"/>
+                                    </tree>
+                                </field>
+                                <div attrs="{'invisible': [('unmatched_count', '=', 0)]}"
+                                     style="margin-top:6px;color:#dc3545;font-size:0.9em">
+                                    ⚠️ <field name="unmatched_count" nolabel="1"
+                                              style="display:inline;font-weight:bold"/> línea(s) sin producto.
+                                </div>
+                            </page>
+                            <page string="🤖 Debug IA">
+                                <group string="Extracción JSON">
+                                    <field name="ai_raw_json" widget="text" readonly="1" nolabel="1"/>
+                                </group>
+                                <group string="Matching JSON">
+                                    <field name="ai_matching_json" widget="text" readonly="1" nolabel="1"/>
+                                </group>
+                                <div attrs="{'invisible': [('ai_error_message', '=', False)]}" style="color:red;padding:8px">
+                                    <b>Error:</b> <field name="ai_error_message" readonly="1" nolabel="1"/>
+                                </div>
+                            </page>
+                        </notebook>
+
+                        <!-- Notes -->
+                        <group string="📝 Notas / Detalle Factura" colspan="4"
+                               attrs="{'invisible': [('notes', '=', False)]}">
+                            <field name="notes" nolabel="1"/>
+                        </group>
+
+                    </group>
+
+                    <!-- ═══ STAGE 3 — APPROVE ═══ -->
+                    <group attrs="{'invisible': [('state', '!=', 'approve')]}">
+
+                        <div class="kes-info" colspan="4" style="margin-bottom:12px">
+                            <b>Revisa y marca cada casilla para aprobar.</b>
+                        </div>
+
+                        <group string="📋 Resumen" colspan="4">
+                            <group>
+                                <field name="vendor_id" readonly="1" string="Proveedor"/>
+                                <field name="vendor_nit" readonly="1"/>
+                                <field name="invoice_number" readonly="1"/>
+                                <field name="invoice_date" readonly="1"/>
+                                <field name="target_type" readonly="1" string="Tipo"/>
+                            </group>
+                            <group>
+                                <field name="subtotal_before_tax" readonly="1"/>
+                                <field name="tax_amount" readonly="1"/>
+                                <field name="total_amount" readonly="1"/>
+                                <field name="source_purchase_id" readonly="1"
+                                       attrs="{'invisible': [('source_purchase_id', '=', False)]}"/>
+                                <field name="source_move_id" readonly="1"
+                                       attrs="{'invisible': [('source_move_id', '=', False)]}"/>
+                            </group>
+                        </group>
+
+                        <group string="📊 Cuenta Analítica" colspan="4"
+                               attrs="{'invisible': [('target_type', '=', 'fel_only')]}">
+                            <field name="analytic_account_id" string="Cuenta Analítica"
+                                   options="{'no_quick_create': false}" placeholder="Dejar vacío si no aplica..."/>
+                        </group>
+
+                        <group string="📄 Registro FEL" colspan="4">
+                            <field name="create_fel" string="Crear registro FEL automáticamente"/>
+                        </group>
+
+                        <group string="✅ Checklist" colspan="4">
+                            <field name="approve_vendor_ok" string="Proveedor correcto"/>
+                            <field name="approve_lines_ok" string="Líneas verificadas"/>
+                            <field name="approve_amounts_ok" string="Montos verificados"/>
+                            <field name="approve_notes" string="Notas (opcional)"
+                                   placeholder="Autorizado por..."/>
+                        </group>
+
+                    </group>
+
+                    <!-- ═══ STAGE 4 — DONE ═══ -->
+                    <group attrs="{'invisible': [('state', '!=', 'done')]}">
+                        <div attrs="{'invisible': [('purchase_order_id', '=', False)]}" colspan="4"
+                             style="padding:12px;background:#d4edda;border-radius:6px;border:1px solid #c3e6cb;margin-bottom:8px;">
+                            <h4 style="color:#155724;margin:0">✅ Orden de Compra Creada</h4>
+                        </div>
+                        <field name="purchase_order_id" readonly="1"
+                               attrs="{'invisible': [('purchase_order_id', '=', False)]}"/>
+
+                        <div attrs="{'invisible': [('vendor_bill_id', '=', False)]}" colspan="4"
+                             style="padding:12px;background:#e8d5f5;border-radius:6px;border:1px solid #d4b8e8;margin-bottom:8px;">
+                            <h4 style="color:#4a1d7a;margin:0">✅ Factura de Proveedor Creada</h4>
+                        </div>
+                        <field name="vendor_bill_id" readonly="1"
+                               attrs="{'invisible': [('vendor_bill_id', '=', False)]}"/>
+
+                        <div attrs="{'invisible': [('fel_document_id', '=', False)]}" colspan="4"
+                             style="padding:12px;background:#d1ecf1;border-radius:6px;border:1px solid #b8daff;margin-top:8px;">
+                            <h4 style="color:#0c5460;margin:0">📄 Registro FEL Creado</h4>
+                        </div>
+                        <field name="fel_document_id" readonly="1"
+                               attrs="{'invisible': [('fel_document_id', '=', False)]}"/>
+                    </group>
+
+                </sheet>
+
+                <footer>
+                    <button name="action_analyze_with_ai" type="object" string="🔍 Analizar con IA"
+                            class="btn-primary" attrs="{'invisible': [('state', '!=', 'upload')]}"/>
+                    <button name="action_analyze_with_ai" type="object" string="🔄 Re-Analizar"
+                            class="btn-secondary" attrs="{'invisible': [('state', '!=', 'review')]}"/>
+                    <button name="action_proceed_to_approve" type="object" string="➡️ Aprobar"
+                            class="btn-primary" attrs="{'invisible': [('state', '!=', 'review')]}"/>
+                    <button name="action_go_back_to_review" type="object" string="← Volver"
+                            class="btn-secondary" attrs="{'invisible': [('state', '!=', 'approve')]}"/>
+                    <button name="action_approve_and_create_po" type="object" string="✅ Crear Documento(s)"
+                            class="btn-success" attrs="{'invisible': [('state', '!=', 'approve')]}"/>
+                    <button name="action_open_po" type="object" string="📋 Ver Documento"
+                            class="btn-primary" attrs="{'invisible': ['|', ('state', '!=', 'done'), '&amp;', ('purchase_order_id', '=', False), ('vendor_bill_id', '=', False)]}"/>
+                    <button name="action_open_fel" type="object" string="📄 Ver FEL"
+                            class="btn-info" attrs="{'invisible': ['|', ('state', '!=', 'done'), ('fel_document_id', '=', False)]}"/>
+                    <button string="Cerrar" class="btn-secondary" special="cancel"/>
+                </footer>
+
+            </form>
+        </field>
+    </record>
+
+</odoo>

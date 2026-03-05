@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══ PURCHASE MODULE ═══ -->
+    <menuitem id="menu_purchase_ai_root" name="AI Tools"
+              parent="purchase.menu_purchase_root" sequence="90"
+              groups="purchase.group_purchase_user"/>
+
+    <menuitem id="menu_purchase_ai_scan" name="📄 Escanear Factura con IA"
+              parent="menu_purchase_ai_root"
+              action="kesiyos_purchase_ai.action_purchase_ai_wizard"
+              sequence="1" groups="purchase.group_purchase_user"/>
+
+    <menuitem id="menu_purchase_ai_scan_bill" name="🧾 Escanear → Factura de Proveedor"
+              parent="menu_purchase_ai_root"
+              action="kesiyos_purchase_ai.action_purchase_ai_wizard_bill"
+              sequence="2" groups="purchase.group_purchase_user"/>
+
+    <!-- ═══ ACCOUNTING MODULE — Vendors submenu ═══ -->
+    <menuitem id="menu_account_ai_root" name="AI Tools"
+              parent="account.menu_finance_payables" sequence="90"
+              groups="account.group_account_invoice"/>
+
+    <menuitem id="menu_account_ai_scan_bill" name="📄 Escanear Factura con IA"
+              parent="menu_account_ai_root"
+              action="kesiyos_purchase_ai.action_purchase_ai_wizard_bill"
+              sequence="1" groups="account.group_account_invoice"/>
+
+</odoo>

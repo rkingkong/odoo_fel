@@ -1,20 +1,49 @@
 # -*- coding: utf-8 -*-
 {
-    "name": "TORELO - FEL (Adjuntar FEL a PO y Facturas)",
-    "summary": "Subir y controlar archivos FEL en Pedidos de Compra y Facturas de Proveedor",
-    "version": "16.0.1.0.0",
-    "category": "Purchases/Accounting",
-    "author": "TORELO",
-    "license": "LGPL-3",
-    "depends": ["purchase", "account", "mail"],
-    "data": [
-        "security/ir.model.access.csv",
-        "data/sequence.xml",
-        "views/fel_document_views.xml",
-        "views/purchase_order_views.xml",
-        "views/account_move_views.xml",
-        "wizard/fel_upload_wizard_views.xml",
+    'name': 'Kesiyos - AI Purchase Invoice Scanner',
+    'version': '16.0.5.0.0',
+    'category': 'Purchase',
+    'summary': 'Scan FEL invoices & receipts with Claude AI to create POs, Vendor Bills & FEL records',
+    'description': """
+Kesiyos AI Purchase Scanner — Odoo 16
+======================================
+4-stage pipeline:
+  1. Upload a scanned invoice (PDF/JPG/PNG/WEBP)
+  2. Claude AI extracts: vendor, NIT, UUID FEL, lines, IVA, totals
+     + semantic product matching against your catalog
+  3. Review and correct: NIT-first vendor lookup, per-line product search/create
+  4. Approve → creates PO or Vendor Bill (+ optional FEL record)
+
+Launch from:
+  - Purchase → AI Tools menu (standalone)
+  - Accounting → Proveedores → AI Tools menu (standalone)
+  - Purchase Order form → "Escanear FEL" button (creates Bill + FEL linked to PO)
+  - Vendor Bill form → "Escanear FEL" button (creates FEL linked to existing bill)
+
+Configuration:
+  Go to Settings → Technical → Parameters → System Parameters and set:
+    - kesiyos_purchase_ai.claude_api_key
+    - kesiyos_purchase_ai.ai_model
+    - kesiyos_purchase_ai.default_tax_id
+    """,
+    'author': 'Kesiyos',
+    'website': 'https://kesiyos.com',
+    'depends': ['base', 'purchase', 'account', 'uom', 'torelo_fel'],
+    'data': [
+        'security/ir.model.access.csv',
+        'views/purchase_ai_wizard_views.xml',
+        'views/purchase_ai_product_wizard_views.xml',
+        'views/purchase_ai_menus.xml',
+        'views/purchase_order_inherit_views.xml',
+        'views/account_move_inherit_views.xml',
     ],
-    "installable": True,
-    "application": False,
+    'assets': {
+        'web.assets_backend': [
+            'kesiyos_purchase_ai/static/src/css/wizard.css',
+        ],
+    },
+    'installable': True,
+    'application': False,
+    'auto_install': False,
+    'license': 'LGPL-3',
 }

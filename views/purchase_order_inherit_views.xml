@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Add "Escanear FEL" button to Purchase Order form -->
+    <record id="view_purchase_order_form_inherit_ai" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.kesiyos.ai</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Add button next to CREAR FEL in the header area -->
+            <xpath expr="//header" position="inside">
+                <button name="action_open_ai_scanner"
+                        type="object"
+                        string="📄 ESCANEAR FEL"
+                        class="btn-secondary"
+                        attrs="{'invisible': [('state', 'not in', ['purchase', 'done'])]}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
