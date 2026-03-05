@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_torelo_fel_document_purchase_user,torelo.fel.document purchase user,model_torelo_fel_document,purchase.group_purchase_user,1,1,1,1
+access_torelo_fel_document_account_invoice,torelo.fel.document account invoice,model_torelo_fel_document,account.group_account_invoice,1,1,1,1
+access_torelo_fel_upload_wizard_purchase_user,torelo.fel.upload.wizard purchase user,model_torelo_fel_upload_wizard,purchase.group_purchase_user,1,1,1,1
+access_torelo_fel_upload_wizard_account_invoice,torelo.fel.upload.wizard account invoice,model_torelo_fel_upload_wizard,account.group_account_invoice,1,1,1,1

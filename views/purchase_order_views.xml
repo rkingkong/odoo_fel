@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="purchase_order_form_inherit_fel" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.torelo.fel</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Header button near existing actions -->
+            <xpath expr="//header" position="inside">
+                <button name="action_open_fel_wizard" type="object" string="Crear FEL" class="btn-primary"
+                        attrs="{'invisible': [('state', 'in', ('cancel'))]}"/>
+            </xpath>
+
+            <!-- Smart button box -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button type="object" name="action_view_fel_documents" class="oe_stat_button" icon="fa-file-text-o">
+                    <field name="fel_count" widget="statinfo" string="FEL"/>
+                </button>
+            </xpath>
+
+            <!-- Small status line inside the form (optional) -->
+            <xpath expr="//sheet//group" position="after">
+                <group string="FEL" attrs="{'invisible': [('fel_count', '=', 0)]}">
+                    <group>
+                        <field name="fel_total_amount" readonly="1"/>
+                        <field name="fel_ok" readonly="1"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_fel_document_tree" model="ir.ui.view">
+        <field name="name">torelo.fel.document.tree</field>
+        <field name="model">torelo.fel.document</field>
+        <field name="arch" type="xml">
+            <tree string="FELs">
+                <field name="name"/>
+                <field name="state"/>
+                <field name="partner_id"/>
+                <field name="purchase_id"/>
+                <field name="move_id"/>
+                <field name="fel_date"/>
+                <field name="fel_uuid"/>
+                <field name="amount_total"/>
+                <field name="matches_total"/>
+                <field name="create_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_fel_document_form" model="ir.ui.view">
+        <field name="name">torelo.fel.document.form</field>
+        <field name="model">torelo.fel.document</field>
+        <field name="arch" type="xml">
+            <form string="FEL">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="state"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="partner_id"/>
+                            <field name="fel_date"/>
+                        </group>
+                        <group>
+                            <field name="purchase_id"/>
+                            <field name="move_id"/>
+                            <field name="fel_uuid"/>
+                            <field name="fel_series"/>
+                            <field name="fel_number"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group>
+                            <field name="amount_total"/>
+                            <field name="amount_untaxed"/>
+                            <field name="amount_tax"/>
+                            <field name="matches_total" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="fel_file" filename="fel_filename"/>
+                            <field name="fel_filename" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Notas">
+                            <field name="notes" placeholder="Notas internas..."/>
+                        </page>
+                        <page string="Chatter">
+                            <field name="message_follower_ids" widget="mail_followers"/>
+                            <field name="activity_ids" widget="mail_activity"/>
+                            <field name="message_ids" widget="mail_thread"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_fel_document" model="ir.actions.act_window">
+        <field name="name">FEL</field>
+        <field name="res_model">torelo.fel.document</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Cree su primer FEL.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_torelo_fel_root" name="FEL" parent="purchase.menu_purchase_root" sequence="200"/>
+    <menuitem id="menu_torelo_fel_documents" name="Documentos FEL" parent="menu_torelo_fel_root" action="action_fel_document" sequence="10"/>
+</odoo>

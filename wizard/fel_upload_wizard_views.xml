@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_fel_upload_wizard_form" model="ir.ui.view">
+        <field name="name">torelo.fel.upload.wizard.form</field>
+        <field name="model">torelo.fel.upload.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Crear FEL" create="false" edit="false">
+                <group>
+                    <group>
+                        <field name="purchase_id" invisible="1"/>
+                        <field name="move_id" invisible="1"/>
+                        <field name="company_id" invisible="1"/>
+                        <field name="partner_id"/>
+                        <field name="fel_date"/>
+                        <field name="state"/>
+                    </group>
+                    <group>
+                        <field name="fel_uuid"/>
+                        <field name="fel_series"/>
+                        <field name="fel_number"/>
+                        <field name="amount_total"/>
+                        <field name="amount_untaxed"/>
+                        <field name="amount_tax"/>
+                    </group>
+                </group>
+
+                <group>
+                    <field name="fel_file" filename="fel_filename"/>
+                    <field name="fel_filename" invisible="1"/>
+                </group>
+
+                <group>
+                    <field name="notes" placeholder="Notas internas..." nolabel="1"/>
+                </group>
+
+                <footer>
+                    <button string="Guardar FEL" type="object" name="action_confirm" class="btn-primary"/>
+                    <button string="Cancelar" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

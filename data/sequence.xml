@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_torelo_fel_document" model="ir.sequence">
+        <field name="name">TORELO FEL</field>
+        <field name="code">torelo.fel.document</field>
+        <field name="prefix">FEL/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>
